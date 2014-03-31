@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+<head>
+    <meta charset="utf-8">
+	<title></title>
+	<script src="d3/d3.v3.js"></script>
+         <style type="text/css">
+
+         /* Questions: mark.rios@cal.berkeley.edu */
+
+         /* 
+         In mac terminal, type "python -m SimpleHTTPServer 8888" in the 
+         directory which contains the index.html. Then load in web browser with "localhost:8888".
+          */
+
+         /* Begin adaptation of CSS Styling by Scott Murray, http://alignedleft.com */
+         body {
+            background-color: black ;
+         }
+
+         svg {
+            background-color: black;
+         }
+         
+         .axis path,
+         .axis line {
+            fill: none;
+            stroke: white;
+            shape-rendering: crispEdges;
+         }
+         
+         .axis text {
+            font-family: sans-serif;
+            font-size: 11px;
+         }
+
+          .legend text {
+            font-family: sans-serif;
+            font-size: 11px;
+         }
+         /* End of adaptation */
+      </style>
+</head>
+<body>
+
+<script>
+
+	
+	d3.csv("data.csv", function(data) {
+   			
+            var scrW = 1024;
+            var scrH = 768;
+
+            var margin = {top: 50, right: 50, bottom: 100 , left: 90  },
+            w = scrW - margin.left - margin.right,
+            h = scrH - margin.top - margin.bottom;
+            
+            var shiftAxis = h - margin.top - margin.bottom;
+
+   			var canvas = d3.select("body").append("svg")
+   				.attr("width",w) 
+   				.attr("height",h)
+               .append("g")
+               .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+   			var xScale = d3.scale.linear() 
+   				.domain([100,1150]) 
+   				.range([0,w - margin.right - margin.left ]);
+
+            var xAxis = d3.svg.axis() 
+               .scale(xScale)
+               .orient("bottom")
+               .ticks(8);
+
+            // color Scale http://stackoverflow.com/questions/13006712/d3-js-sankey-diagram-rectangles-fill-color
+            var colorScale = d3.scale.ordinal()   
+             .domain(["A", "B", "C","D","E","F","G"])
+             //http://colorbrewer2.org/?type=diverging&scheme=RdYlBu&n=7
+             .range(['rgb(215,48,39)','rgb(252,141,89)','rgb(254,224,144)','rgb(255,255,191)','rgb(224,243,248)','rgb(145,191,219)',
+               'rgb(69,117,180)']);
+            
+            var barHeight = 110;
+
+   			canvas.selectAll("rect")
+   				.data(data)
+   				.enter()
+   					.append("rect")
+   					.attr("height",barHeight) 
+   					.attr("y",function(d){ if(d.type=="PO"){return margin.top + h*.3  ;} else {return margin.top + h*.5;}   }) 
+                  .attr("width",0)
+                  .transition()
+                  .delay(function(d){ return xScale(d.start_time)*2; })     // slow down by 100% for perception
+   					.attr("x",function(d){ return xScale(d.start_time);})
+   					.attr("width",function(d){ return d.duration;})
+                  .attr("fill",function(d){ return colorScale(d.Event);})
+   					;
+   			
+            canvas.append("text")
+                  .attr("x",-margin.left/2)
+                  .attr("y",margin.top + h*.3 + barHeight/2)
+                  .attr("stroke","white")
+                  .attr("font-family","sans-serif")
+                  .attr("font-size","10px")
+                  .text("po");
+
+            canvas.append("text")
+                  .attr("x",-margin.left/2)
+                  .attr("y",margin.top + h*.5 + barHeight/2)
+                  .attr("stroke","white")
+                  .attr("font-family","sans-serif")
+                  .attr("font-size","10px")
+                  .text("gl");
+
+           
+
+            var axisTransform	= canvas.append("g")
+                  .attr("class", "x axis")
+                  .attr("transform", "translate(0," + shiftAxis + ")")
+                  .attr("fill","white")
+                  .call(xAxis);
+
+            // Begin adaptation from http://bl.ocks.org/weiglemc/6185069 
+
+              var legend = canvas.selectAll(".legend")
+                  .data(colorScale.domain())
+                  .enter().append("g")
+                  .attr("class", "legend")
+                  .attr("fill","white")
+                  .attr("transform", function(d, i) { return "translate(" + margin.left + "," + i * 18 + ")"; });
+
+            // draw legend colored rectangles
+            
+             legend.append("circle")
+                  .attr("cx", 45)
+                  .attr("cy",10)
+                  .attr("r",5)
+                  .style("fill", colorScale);
+
+            // draw legend text
+            
+            legend.append("text")
+                  .attr("x", 30)
+                  .attr("y", 9)
+                  .attr("dy", ".35em")
+                  .style("text-anchor", "end")
+                  .text(function(d) { return d;})
+
+             // End adaptation 
+});
+
+
+</script>
+
+</body>
+</html>
+
+	
